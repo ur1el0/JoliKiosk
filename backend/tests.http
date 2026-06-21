@@ -1,0 +1,21 @@
+@baseUrl = http://localhost:8000
+@menuItemId = 1
+
+### Get available menu items
+GET {{baseUrl}}/api/menu-items/
+
+### Create an order
+POST {{baseUrl}}/api/orders/
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "menuItemId": {{menuItemId}},
+      "quantity": 2
+    }
+  ]
+}
+
+### Get an order after replacing the ID with the POST response ID
+GET {{baseUrl}}/api/orders/1/
