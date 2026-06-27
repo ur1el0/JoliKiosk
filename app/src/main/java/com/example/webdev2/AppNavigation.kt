@@ -1,5 +1,12 @@
 package com.example.webdev2
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.outlined.Home
@@ -9,6 +16,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,6 +28,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,9 +53,29 @@ private sealed class Screen(val route: String) {
 
 @Composable
 fun AppNavigation() {
+    var selectedBranch by remember { mutableStateOf<Branch?>(null) }
+
+    AnimatedContent(
+        targetState = selectedBranch,
+        transitionSpec = {
+            fadeIn(tween(400)) + scaleIn(initialScale = 0.96f) togetherWith fadeOut(tween(250))
+        },
+        label = "branch-transition",
+    ) { branch ->
+        if (branch == null) {
+            BranchSelectionScreen(onBranchSelected = { selectedBranch = it })
+        } else {
+            KioskContent(branch = branch, onChangeBranch = { selectedBranch = null })
+        }
+    }
+}
+
+@Composable
+private fun KioskContent(branch: Branch, onChangeBranch: () -> Unit) {
     val api = remember { KioskApi() }
     val scope = rememberCoroutineScope()
     val navController = rememberNavController()
+    val snackbarHostState = remember { SnackbarHostState() }
     val quantities = remember { mutableStateMapOf<Int, Int>() }
     var menu by remember { mutableStateOf<List<MenuItem>>(emptyList()) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -52,16 +83,21 @@ fun AppNavigation() {
     var submittedOrder by remember { mutableStateOf<SubmittedOrder?>(null) }
     var isSubmitting by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
+    suspend fun loadMenu() {
+        isLoading = true
+        error = null
         runCatching { api.menu() }
             .onSuccess { menu = it }
             .onFailure { error = it.message ?: "Unable to load the menu." }
         isLoading = false
     }
 
+    LaunchedEffect(Unit) { loadMenu() }
+
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     Scaffold(
         containerColor = BgGray,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             NavigationBar(containerColor = CardWhite, tonalElevation = 0.dp) {
                 listOf(Screen.Menu to "Menu", Screen.Cart to "Cart").forEach { (screen, label) ->
@@ -79,38 +115,84 @@ fun AppNavigation() {
                             if (screen == Screen.Cart) {
                                 BadgedBox(badge = {
                                     val count = quantities.values.sum()
-                                    if (count > 0) Badge(containerColor = Pink) { Text(count.toString(), color = Color.White) }
-                                }) { Icon(Icons.Default.ShoppingCart, contentDescription = "Cart") }
-                            } else Icon(Icons.Outlined.Home, contentDescription = "Menu")
-                        }
+                                    if (count > 0) {
+                                        Badge(containerColor = Pink) {
+                                            Text(count.toString(), color = Color.White)
+                                        }
+                                    }
+                                }) {
+                                    Icon(Icons.Default.ShoppingCart, contentDescription = "Cart")
+                                }
+                            } else {
+                                Icon(Icons.Outlined.Home, contentDescription = "Menu")
+                            }
+                        },
                     )
                 }
             }
-        }
+        },
     ) { padding ->
-        NavHost(navController, Screen.Menu.route, androidx.compose.ui.Modifier.padding(padding)) {
+        NavHost(
+            navController = navController,
+            startDestination = Screen.Menu.route,
+            modifier = Modifier.padding(padding),
+        ) {
             composable(Screen.Menu.route) {
-                MenuScreen(menu, quantities, isLoading, error, onRetry = {
-                    isLoading = true
-                    error = null
-                    scope.launch { runCatching { api.menu() }.onSuccess { menu = it }.onFailure { error = it.message }; isLoading = false }
-                }, onAdd = { item -> quantities[item.id] = (quantities[item.id] ?: 0) + 1 })
+                MenuScreen(
+                    menu = menu,
+                    quantities = quantities,
+                    branch = branch,
+                    isLoading = isLoading,
+                    error = error,
+                    onRetry = { scope.launch { loadMenu() } },
+                    onChangeBranch = onChangeBranch,
+                    onAdd = { item ->
+                        quantities[item.id] = (quantities[item.id] ?: 0) + 1
+                        scope.launch {
+                            snackbarHostState.currentSnackbarData?.dismiss()
+                            snackbarHostState.showSnackbar(
+                                message = "${item.name} added to cart",
+                                duration = SnackbarDuration.Short,
+                            )
+                        }
+                    },
+                )
             }
             composable(Screen.Cart.route) {
-                CartScreen(menu, quantities, isSubmitting, error, onQuantityChange = { id, quantity ->
-                    if (quantity <= 0) quantities.remove(id) else quantities[id] = quantity
-                }, onCheckout = {
-                    isSubmitting = true
-                    error = null
-                    scope.launch {
-                        runCatching { api.submitOrder(quantities) }
-                            .onSuccess { submittedOrder = it; quantities.clear() }
-                            .onFailure { error = it.message ?: "Unable to submit your order." }
-                        isSubmitting = false
-                    }
-                })
+                CartScreen(
+                    menu = menu,
+                    quantities = quantities,
+                    isSubmitting = isSubmitting,
+                    error = error,
+                    onQuantityChange = { id, quantity ->
+                        if (quantity <= 0) quantities.remove(id) else quantities[id] = quantity
+                    },
+                    onCheckout = {
+                        isSubmitting = true
+                        error = null
+                        scope.launch {
+                            runCatching { api.submitOrder(quantities) }
+                                .onSuccess {
+                                    submittedOrder = it
+                                    quantities.clear()
+                                }
+                                .onFailure {
+                                    error = it.message ?: "Unable to submit your order."
+                                }
+                            isSubmitting = false
+                        }
+                    },
+                )
             }
         }
     }
-    submittedOrder?.let { order -> OrderConfirmation(order) { submittedOrder = null; navController.navigate(Screen.Menu.route) { popUpTo(Screen.Menu.route) { inclusive = true } } } }
+
+    submittedOrder?.let { order ->
+        OrderConfirmation(order) {
+            submittedOrder = null
+            navController.navigate(Screen.Menu.route) {
+                popUpTo(Screen.Menu.route) { inclusive = true }
+            }
+        }
+    }
 }
