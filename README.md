@@ -2,7 +2,10 @@
 
 An Android kiosk-style ordering app with a small Django API. It uses generic demo menu data and is not affiliated with or connected to Jollibee.
 
-For complete Windows installation and run instructions, including Docker, VS Code, Android Studio, the emulator, and ADB, see [docs/windows-setup.md](docs/windows-setup.md).
+Windows documentation:
+
+- [Complete setup and troubleshooting guide](docs/windows-setup.md)
+- [Command-focused PowerShell runbook](docs/windows-runbook.md)
 
 ## Run the API
 
