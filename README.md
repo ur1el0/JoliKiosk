@@ -22,6 +22,15 @@ The API is available at `http://127.0.0.1:8000`:
 
 For the Android emulator, the debug app targets `http://10.0.2.2:8000`. A physical device needs the computer's LAN IP instead. Configure a real HTTPS API host for release builds in `app/build.gradle.kts`.
 
+## Build the Android app
+
+The Android project is self-contained under `app/`:
+
+```bash
+cd app
+./gradlew assembleDebug
+```
+
 ## Verification
 
 ```bash

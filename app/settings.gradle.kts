@@ -20,5 +20,3 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Webdev2"
-include(":app")
- 
