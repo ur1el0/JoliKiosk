@@ -1,5 +1,10 @@
 *.iml
 .gradle
+/.idea/
+/.kotlin/
+/.vscode/
+/.venv/
+/venv/
 /local.properties
 /.idea/caches
 /.idea/libraries
