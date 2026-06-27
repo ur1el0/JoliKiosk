@@ -42,7 +42,7 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "KIOSK_API_URL", "\"http://10.0.2.2:8000\"")
+            buildConfigField("String", "KIOSK_API_URL", "\"http://127.0.0.1:8000\"")
         }
         release {
             buildConfigField("String", "KIOSK_API_URL", "\"https://replace-with-your-api-host\"")
