@@ -2,7 +2,8 @@ import json
 from django.db import transaction
 from django.db.models import Max
 from django.http import HttpRequest, JsonResponse
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET, require_http_methods
 from .models import MenuItem, Order, OrderItem
 
 
@@ -19,8 +20,13 @@ def menu_items(_: HttpRequest) -> JsonResponse:
     return JsonResponse({"items": [menu_payload(item) for item in MenuItem.objects.filter(is_available=True)]})
 
 
-@require_POST
-def create_order(request: HttpRequest) -> JsonResponse:
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def orders_collection(request: HttpRequest) -> JsonResponse:
+    if request.method == "GET":
+        orders = Order.objects.prefetch_related("items").order_by("-created_at", "-id")
+        return JsonResponse({"orders": [order_payload(order) for order in orders]})
+
     try:
         requested_items = json.loads(request.body)["items"]
     except (json.JSONDecodeError, KeyError, TypeError):

@@ -17,5 +17,8 @@ Content-Type: application/json
   ]
 }
 
+### Get all orders
+GET {{baseUrl}}/api/orders/
+
 ### Get an order after replacing the ID with the POST response ID
 GET {{baseUrl}}/api/orders/1/
