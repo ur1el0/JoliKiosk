@@ -76,8 +76,8 @@ private val branches = listOf(
     ),
 )
 
-private fun peso(centavos: Int): String = NumberFormat.getCurrencyInstance(Locale("en", "PH"))
-    .format(centavos / 100.0)
+private fun peso(pesos: Int): String = NumberFormat.getCurrencyInstance(Locale("en", "PH"))
+    .format(pesos)
 
 @Composable
 fun BranchSelectionScreen(onBranchSelected: (Branch) -> Unit) {
@@ -226,7 +226,7 @@ private fun MenuCard(item: MenuItem, quantity: Int, onAdd: () -> Unit) {
                     overflow = TextOverflow.Ellipsis,
                 )
                 Spacer(Modifier.height(5.dp))
-                Text(peso(item.priceInCentavos), fontWeight = FontWeight.ExtraBold, color = Pink)
+                Text(peso(item.priceInPesos), fontWeight = FontWeight.ExtraBold, color = Pink)
             }
             Button(onClick = onAdd, colors = ButtonDefaults.buttonColors(containerColor = Pink)) {
                 Text(if (quantity > 0) "Add ($quantity)" else "Add")
@@ -245,7 +245,7 @@ fun CartScreen(
     onCheckout: () -> Unit,
 ) {
     val lines = menu.mapNotNull { item -> quantities[item.id]?.takeIf { it > 0 }?.let { item to it } }
-    val total = lines.sumOf { (item, quantity) -> item.priceInCentavos * quantity }
+    val total = lines.sumOf { (item, quantity) -> item.priceInPesos * quantity }
     Column(Modifier.fillMaxSize().background(BgGray)) {
         Header("Your Cart", "Review your order")
         if (lines.isEmpty()) {
@@ -305,7 +305,7 @@ private fun CartRow(item: MenuItem, quantity: Int, onQuantityChange: (Int, Int) 
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(item.name, fontWeight = FontWeight.Bold)
-                Text(peso(item.priceInCentavos), color = TextGray, fontSize = 13.sp)
+                Text(peso(item.priceInPesos), color = TextGray, fontSize = 13.sp)
             }
             IconButton(onClick = { onQuantityChange(item.id, quantity - 1) }) {
                 Icon(Icons.Default.Remove, contentDescription = "Remove one")

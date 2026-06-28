@@ -43,7 +43,7 @@ Represents a product that Android can display and order.
 | `name` | Product name |
 | `category` | Burger, Meal, Fries, Drink, and similar categories |
 | `description` | Product description |
-| `price` | Price in Philippine centavos; `12000` means ₱120.00 |
+| `price` | Price in Philippine pesos; `120` is displayed as ₱120.00 |
 | `is_available` | Controls whether the item appears in the API menu |
 
 ### `Order`
@@ -55,7 +55,7 @@ Represents one completed checkout request.
 | `id` | Internal database order ID |
 | `queue_number` | Number displayed to the kiosk user |
 | `status` | `received`, `preparing`, `ready`, `completed`, or `cancelled` |
-| `total` | Server-calculated total in centavos |
+| `total` | Server-calculated total in Philippine pesos |
 | `created_at` | Time the order was saved |
 
 The backend currently creates orders with status `received`. There is no public API endpoint for changing status, but staff can change it through Django Admin.
@@ -122,7 +122,7 @@ Example response:
       "name": "Yum Burger",
       "category": "Burger",
       "description": "Juicy beef patty with fresh lettuce, tomato, and special sauce.",
-      "price": 12000
+      "price": 42
     }
   ]
 }
@@ -161,18 +161,18 @@ Example successful response (`201 Created`):
   "id": 12,
   "queueNumber": 12,
   "status": "received",
-  "total": 42000,
+  "total": 141,
   "items": [
     {
       "menuItemId": 1,
       "name": "Yum Burger",
-      "unitPrice": 12000,
+      "unitPrice": 42,
       "quantity": 2
     },
     {
       "menuItemId": 4,
       "name": "Coke Float",
-      "unitPrice": 18000,
+      "unitPrice": 57,
       "quantity": 1
     }
   ]
@@ -200,12 +200,12 @@ Response:
       "id": 12,
       "queueNumber": 12,
       "status": "received",
-      "total": 42000,
+      "total": 84,
       "items": [
         {
           "menuItemId": 1,
           "name": "Yum Burger",
-          "unitPrice": 12000,
+          "unitPrice": 42,
           "quantity": 2
         }
       ]

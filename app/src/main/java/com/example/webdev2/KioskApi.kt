@@ -10,7 +10,7 @@ import java.net.URL
 data class MenuItem(
     val id: Int,
     val name: String,
-    val priceInCentavos: Int,
+    val priceInPesos: Int,
     val category: String,
     val description: String
 )
@@ -26,7 +26,7 @@ class KioskApi(private val baseUrl: String = BuildConfig.KIOSK_API_URL) {
             MenuItem(
                 id = item.getInt("id"),
                 name = item.getString("name"),
-                priceInCentavos = item.getInt("price"),
+                priceInPesos = item.getInt("price"),
                 category = item.getString("category"),
                 description = item.getString("description")
             )
