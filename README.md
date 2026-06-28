@@ -7,6 +7,11 @@ Windows documentation:
 - [Complete setup and troubleshooting guide](docs/windows-setup.md)
 - [Command-focused PowerShell runbook](docs/windows-runbook.md)
 
+Architecture and behavior:
+
+- [Simple application flow](docs/app-flow.md)
+- [Backend, database, and Android API guide](docs/backend-api.md)
+
 ## Run the API
 
 Use Python 3.12+ and install the backend dependencies:
